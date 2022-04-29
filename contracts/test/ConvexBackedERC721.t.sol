@@ -66,6 +66,24 @@ contract ConvexBackedERC721Test is DSTestPlus {
         assertEq(ERC721.totalSupply(), 0);
     }
 
+    function testFreeMint() external {
+        address[] memory addresses = new address[](1);
+        addresses[0] = address(this);
+        uint256[] memory amounts = new uint256[](1);
+        amounts[0] = 1;
+
+        hevm.prank(teamMultisig);
+        ERC721.giftFreeMints(addresses, amounts);
+
+        assertEq(ERC721.freeMints(address(this)), 1);
+
+        uint256 id = ERC721.mint(address(this));
+
+        assertEq(ERC721.ownerOf(id), address(this));
+        assertEq(ERC721.currentId(), 1);
+        assertEq(ERC721.totalSupply(), 1);
+    }
+
     function testLockBacking() external {
         CVX.mint(address(this), priceToMint);
         ERC721.mint(address(this));

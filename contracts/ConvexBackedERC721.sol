@@ -17,9 +17,9 @@ contract ConvexBackedERC721 is ERC721, Ownable {
     uint256 public totalSupply;
 
     uint256 public priceToMint; // Paid for in CVX.
+    mapping(address => uint256) public freeMints; // Amount of free mints gifted per address.
 
-    // Percentage of mint price that goes towards the team.
-    uint256 public teamRate = 20_00;
+    uint256 public teamRate = 20_00; // Percentage of mint price that goes towards the team.
     uint256 public constant DENOMINATOR = 100_00;
 
     IDelegation public immutable delegateRegistry; // 0x469788fE6E9E9681C6ebF3bF78e7Fd26Fc015446
@@ -49,11 +49,16 @@ contract ConvexBackedERC721 is ERC721, Ownable {
     function tokenURI(uint256 id) public view override returns (string memory) {}
 
     function mint(address receiver) external returns (uint256 id) {
-        // Transfer CVX used to pay for mint to the this contract.
-        CVX.safeTransferFrom(msg.sender, address(this), priceToMint);
+        if (freeMints[msg.sender] == 0) {
+            // Transfer CVX used to pay for mint to the this contract.
+            CVX.safeTransferFrom(msg.sender, address(this), priceToMint);
 
-        // Transfer portion of CVX to team's multisig.
-        CVX.safeTransfer(owner(), (priceToMint * teamRate) / DENOMINATOR);
+            // Transfer portion of CVX to team's multisig.
+            CVX.safeTransfer(owner(), (priceToMint * teamRate) / DENOMINATOR);
+        } else {
+            // Decrement amount of free mints.
+            freeMints[msg.sender]--;
+        }
 
         // Mint NFT to receiver.
         id = currentId++;
@@ -80,5 +85,9 @@ contract ConvexBackedERC721 is ERC721, Ownable {
 
     function lockBacking(uint256 amount) external onlyOwner {
         cvxLocker.lock(address(this), amount, 0);
+    }
+
+    function giftFreeMints(address[] calldata addresses, uint256[] calldata amounts) external onlyOwner {
+        for (uint256 i; i < addresses.length; i++) freeMints[addresses[i]] = amounts[i];
     }
 }
