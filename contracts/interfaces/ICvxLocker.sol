@@ -7,4 +7,8 @@ interface ICvxLocker {
         uint256 _amount,
         uint256 _spendRatio
     ) external;
+
+    function lockedBalanceOf(address _user) external view returns (uint256 amount);
+
+    function getReward(address _account) external;
 }

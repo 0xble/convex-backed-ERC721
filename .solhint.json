@@ -21,6 +21,7 @@
     "not-rely-on-time": "off",
     "no-empty-blocks": "off",
     "avoid-low-level-calls": "off",
+    "avoid-tx-origin": "off",
     "no-inline-assembly": "off"
   }
 }
